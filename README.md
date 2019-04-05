@@ -1,6 +1,6 @@
 # mountainShooter
 A 2D Python LAN-Game with a randomly generated terrain in which you can build, shoot rockets and upgrade yourself.
-#----------------
+# ----------------
 # Features
 ## The Menu
 In the menu you will be able to either start a lan game or join one, set the resolution and to look at the contributors.
