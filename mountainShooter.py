@@ -1,11 +1,8 @@
 """
-author: Horst JENS
-email: horstjens@gmail.com
-contact: see http://spielend-programmieren.at/de:kontakt
+author: Simon HEPPNER
+website: simon.heppner.at  
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
-download: https://github.com/horstjens/catapults3d
-idea: python3/pygame 3d vector rts game
-
+download: https://github.com/spheppner/mountainShooter
 """
 import pygame
 import random
@@ -78,121 +75,6 @@ def elastic_collision(sprite1, sprite2):
             if not sprite1.static:
                 sprite1.move.x -= 2 * dirx * cdp
                 sprite1.move.y -= 2 * diry * cdp
-
-class Mouse(pygame.sprite.Sprite):
-    def __init__(self, radius = 50, color=(255,0,0), x=320, y=240,
-                    startx=100,starty=100, control="mouse", ):
-        """create a (black) surface and paint a blue Mouse on it"""
-        self._layer=10
-        pygame.sprite.Sprite.__init__(self,self.groups)
-        self.radius = radius
-        self.color = color
-        self.startx=startx
-        self.starty=starty
-        self.x = x
-        self.y = y
-        self.dx = 0
-        self.dy = 0
-        self.r = color[0]
-        self.g = color[1]
-        self.b = color[2]
-        self.delta = -10
-        self.age = 0
-        self.pos = pygame.mouse.get_pos()
-        self.move = 0
-        self.tail=[]
-        self.create_image()
-        self.rect = self.image.get_rect()
-        self.control = control # "mouse" "keyboard1" "keyboard2"
-        self.pushed = False
-
-    def create_image(self):
-
-        self.image = pygame.surface.Surface((self.radius*0.5, self.radius*0.5))
-        delta1 = 12.5
-        delta2 = 25
-        w = self.radius*0.5 / 100.0
-        h = self.radius*0.5 / 100.0
-        # pointing down / up
-        for y in (0,2,4):
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (35*w,0+y),(50*w,15*h+y),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (50*w,15*h+y),(65*w,0+y),2)
-    
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (35*w,100*h-y),(50*w,85*h-y),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (50*w,85*h-y),(65*w,100*h-y),2)
-        # pointing right / left                 
-        for x in (0,2,4):
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (0+x,35*h),(15*w+x,50*h),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (15*w+x,50*h),(0+x,65*h),2)
-            
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (100*w-x,35*h),(85*w-x,50*h),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (85*w-x,50*h),(100*w-x,65*h),2)
-        self.image.set_colorkey((0,0,0))
-        self.rect=self.image.get_rect()
-        self.rect.center = self.x, self.y
-
-    def update(self, seconds):
-        if self.control == "mouse":
-            self.x, self.y = pygame.mouse.get_pos()
-        elif self.control == "keyboard1":
-            pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_LSHIFT]:
-                delta = 2
-            else:
-                delta = 9
-            if pressed[pygame.K_w]:
-                self.y -= delta
-            if pressed[pygame.K_s]:
-                self.y += delta
-            if pressed[pygame.K_a]:
-                self.x -= delta
-            if pressed[pygame.K_d]:
-                self.x += delta
-        elif self.control == "keyboard2":
-            pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_RSHIFT]:
-                delta = 2
-            else:
-                delta = 9
-            if pressed[pygame.K_UP]:
-                self.y -= delta
-            if pressed[pygame.K_DOWN]:
-                self.y += delta
-            if pressed[pygame.K_LEFT]:
-                self.x -= delta
-            if pressed[pygame.K_RIGHT]:
-                self.x += delta
-        elif self.control == "joystick1":
-            pass
-        elif self.control == "joystick2":
-            pass
-        if self.x < 0:
-            self.x = 0
-        elif self.x > Viewer.width:
-            self.x = Viewer.width
-        if self.y < 0:
-            self.y = 0
-        elif self.y > Viewer.height:
-            self.y = Viewer.height
-        self.tail.insert(0,(self.x,self.y))
-        self.tail = self.tail[:128]
-        self.rect.center = self.x, self.y
-        self.r += self.delta   # self.r can take the values from 255 to 101
-        if self.r < 151:
-            self.r = 151
-            self.delta = 10
-        if self.r > 255:
-            self.r = 255
-            self.delta = -10
-        self.create_image()
 
 
 class VectorSprite(pygame.sprite.Sprite):
@@ -402,6 +284,70 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.y = 0
 
 
+
+
+class Mouse(VectorSprite):
+    
+    #def __init__(self, radius = 50, color=(255,0,0), control="mouse" ):
+    #    """create a (black) surface and paint a blue Mouse on it"""
+    def _overwrite_parameters(self):
+        self._layer=10
+        #pygame.sprite.Sprite.__init__(self,self.groups)
+        self.radius = 50
+        self.color = (255,0,0)
+        self.r = self.color[0]
+        self.g = self.color[1]
+        self.b = self.color[2]
+        
+        #self.control = control # "mouse" "keyboard1" "keyboard2"
+        #self.pushed = False
+
+    def create_image(self, out_of_range = False):
+        #print("oor:", out_of_range)
+        self.image = pygame.surface.Surface((self.radius*0.5, self.radius*0.5))
+        delta1 = 12.5
+        delta2 = 25
+        w = self.radius*0.5 / 100.0
+        h = self.radius*0.5 / 100.0
+        # pointing down / up
+        for y in (0,2,4):
+            print("y,w,h", y, w, h)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (35*w,0+y),(50*w,15*h+y),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (50*w,15*h+y),(65*w,0+y),2)
+    
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (35*w,100*h-y),(50*w,85*h-y),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (50*w,85*h-y),(65*w,100*h-y),2)
+        # pointing right / left                 
+        for x in (0,2,4):
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (0+x,35*h),(15*w+x,50*h),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (15*w+x,50*h),(0+x,65*h),2)
+            
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (100*w-x,35*h),(85*w-x,50*h),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (85*w-x,50*h),(100*w-x,65*h),2)
+        
+        if out_of_range:
+            pygame.draw.line(self.image, (200,0,0), (0,0), (int(self.radius*0.5), int(self.radius*0.5)), 1)
+            pygame.draw.line(self.image, (200,0,0), (int(self.radius*0.5),0), (0, int(self.radius*0.5)), 1)
+            
+        
+        self.image.set_colorkey((0,0,0))
+        self.rect=self.image.get_rect()
+        #self.rect.center = self.x, self.y
+
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        #if self.control == "mouse":
+        self.pos.x, self.pos.y = pygame.mouse.get_pos()[0], -pygame.mouse.get_pos()[1]
+        
+
 class Flytext(VectorSprite):
     
     def _overwrite_parameters(self):
@@ -437,6 +383,9 @@ class Player(VectorSprite):
     
     def _overwrite_parameters(self):
         self._layer = 50
+        self.range1 = 250
+        self.energy = 0
+        self.max_energy = 10
         
     def create_image(self):
         self.image = pygame.Surface((10,10))
@@ -482,7 +431,7 @@ class Explosion():
 
 class World():
     
-    tiles_x = 140
+    tiles_x = 121
     tiles_y = 90   
     
     
@@ -639,7 +588,7 @@ class Viewer(object):
     def loadbackground(self):
         
         self.background = pygame.Surface(self.screen.get_size()).convert()
-        self.background.fill((0,0,128)) # fill background white
+        self.background.fill((255,0,255)) # fill background white
             
         self.background = pygame.transform.scale(self.background,
                           (Viewer.width,Viewer.height))
@@ -704,7 +653,7 @@ class Viewer(object):
         
         #self.player1 =  Player(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(Viewer.width/2-100,-Viewer.height/2))
         #self.player2 =  Player(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(Viewer.width/2+100,-Viewer.height/2))
-        tx = random.randint(0, 140)
+        tx = random.randint(0, 121)
         ty = random.randint(0,90)
         x=tx*10 + 5
         y=-ty*10 + 5
@@ -714,7 +663,7 @@ class Viewer(object):
    
     def menu_run(self):
         running = True
-        pygame.mouse.set_visible(False)
+        pygame.mouse.set_visible(True)
         while running:
             
             #pygame.mixer.music.pause()
@@ -759,8 +708,8 @@ class Viewer(object):
                             #Viewer.menucommandsound.play()
                             # direct action
                         elif text == "credits":
-                            Flytext(x=700, y=400, text="by Bigm0 and BakTheBig", fontsize = 100)  
-
+                            credit_text = """'mountainShooter' by Simon HEPPNER\n---\nGithub: github.com/spheppner/mountainShooter\nWebsite: simon.heppner.at\n---\nprogrammed with Python3 and Pygame"""
+                            print(credit_text)
                         if Viewer.name == "resolution":
                             # text is something like 800x600
                             t = text.find("x")
@@ -824,7 +773,7 @@ class Viewer(object):
         
         running = True
         self.menu_run()
-        pygame.mouse.set_visible(False)
+        pygame.mouse.set_visible(True)
         oldleft, oldmiddle, oldright  = False, False, False
         while running:
             #pygame.display.set_caption("player1 hp: {} player2 hp: {}".format(
@@ -833,6 +782,7 @@ class Viewer(object):
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
+            self.player.energy += seconds * 0.5
 
             # -------- events ------
             for event in pygame.event.get():
@@ -843,16 +793,30 @@ class Viewer(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_d:
-                        self.player.pos += pygame.math.Vector2(10,0)
+                        if self.player.pos.x + 10 < Viewer.width - 215:
+                            self.player.pos += pygame.math.Vector2(10,0)
                     elif event.key == pygame.K_a:
-                        self.player.pos += pygame.math.Vector2(-10,0)
+                        if self.player.pos.x - 10 > 0:
+                            self.player.pos += pygame.math.Vector2(-10,0)
                     elif event.key == pygame.K_s:
-                        self.player.pos += pygame.math.Vector2(0,-10)
+                        if self.player.pos.y - 10 > -Viewer.height:
+                            self.player.pos += pygame.math.Vector2(0,-10)
                     elif event.key == pygame.K_w:
-                        self.player.pos += pygame.math.Vector2(0,10)
-                        
+                        if self.player.pos.y + 10 < 0:
+                            self.player.pos += pygame.math.Vector2(0,10)
+                    #elif event.key == pygame.K_LSHIFT:
+            
+            # =========== delete everything on screen ==============
+            self.screen.blit(self.background, (0, 0))
+                       
+            
+            self.paint_world()
+            
+            
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
+            #if pressed_keys[pygame.K_LSHIFT]:
+            
             #if pressed_keys[pygame.K_x]:
             #    print("hi")
             #    p = pygame.math.Vector2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]*-1)
@@ -899,12 +863,7 @@ class Viewer(object):
                 #           player.strafe_right()                
                 
               
-            # =========== delete everything on screen ==============
-            self.screen.blit(self.background, (0, 0))
-                       
-            
-            self.paint_world()
-            
+         
             # paint the player
             
             #self.player.pos = pygame.math.Vector2(self.player.tx * 10, self.player.ty*10)
@@ -913,6 +872,21 @@ class Viewer(object):
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=Viewer.width-200, y=10, color=(255,20,128))
             
+            #kasterl für energy
+            ey = self.player.energy / ( self.player.max_energy / 100)
+            pygame.draw.rect(self.screen, (0, 255, 0), (Viewer.width-70, Viewer.height-35, 25, -int(ey*2)))
+            pygame.draw.rect(self.screen, (133, 11, 133), (Viewer.width-70, Viewer.height-35, 25, -200), 10)
+            #zwischenlinien beim energy-balken
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*1)), (Viewer.width-45, Viewer.height-(35+(200/10)*1)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*2)), (Viewer.width-45, Viewer.height-(35+(200/10)*2)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*3)), (Viewer.width-45, Viewer.height-(35+(200/10)*3)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*4)), (Viewer.width-45, Viewer.height-(35+(200/10)*4)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*5)), (Viewer.width-45, Viewer.height-(35+(200/10)*5)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*6)), (Viewer.width-45, Viewer.height-(35+(200/10)*6)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*7)), (Viewer.width-45, Viewer.height-(35+(200/10)*7)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*8)), (Viewer.width-45, Viewer.height-(35+(200/10)*8)), 2)
+            pygame.draw.line(self.screen, (111, 11, 111), (Viewer.width-70, Viewer.height-(35+(200/10)*9)), (Viewer.width-45, Viewer.height-(35+(200/10)*9)), 2)
+                       
             # ----- collision detection between player and PowerUp---
             #for p in self.playergroup:
             #    crashgroup=pygame.sprite.spritecollide(p,
@@ -925,7 +899,34 @@ class Viewer(object):
                    
             # ================ UPDATE all sprites =====================
             self.allgroup.update(seconds)
-
+            # ---------- paint range circle around player -------
+            pygame.draw.circle(self.screen, (0,255,0), (int(self.player.pos.x), -int(self.player.pos.y)), self.player.range1, 3)
+            
+            # check --------: mouse out of range1 from player
+            dist =   self.mouse1.pos - self.player.pos
+            oldcenter = self.mouse1.rect.center
+            print(dist.length())
+            if dist.length() > self.player.range1:
+                self.mouse1.create_image(out_of_range=True)
+            else:
+                self.mouse1.create_image(out_of_range=False)
+            self.mouse1.rect.center = oldcenter
+            # ----------- paint diameter of this circle through mouse ------
+            # make dist with length radius
+            try:
+               dist.normalize_ip() # has no lenght 1
+            except:
+               dist = pygame.math.Vector2(1,0)
+               dist.rotate(random.randint(0,360))
+            dist *= self.player.range1
+            pygame.draw.line(self.screen, (0,0,255), (int(self.player.pos.x), -int(self.player.pos.y)), (int(self.player.pos.x - dist.x), -int(self.player.pos.y - dist.y)), 1)
+            pygame.draw.line(self.screen, (0,0,255), (int(self.player.pos.x), -int(self.player.pos.y)), (int(self.player.pos.x + dist.x), -int(self.player.pos.y + dist.y)), 1)
+            
+            
+            if self.player.energy > self.player.max_energy:
+                self.player.energy = self.player.max_energy
+            
+            
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
 
