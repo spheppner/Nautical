@@ -1,8 +1,11 @@
 """
-author: Simon HEPPNER
-website: simon.heppner.at  
+author: Horst JENS
+email: horstjens@gmail.com
+contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
-download: https://github.com/spheppner/mountainShooter
+download: https://github.com/horstjens/catapults3d
+idea: python3/pygame 3d vector rts game
+
 """
 import pygame
 import random
@@ -294,7 +297,7 @@ class Mouse(VectorSprite):
         self._layer=10
         #pygame.sprite.Sprite.__init__(self,self.groups)
         self.radius = 50
-        self.color = (255,0,0)
+        self.color = (255, 0, 0)
         self.r = self.color[0]
         self.g = self.color[1]
         self.b = self.color[2]
@@ -344,9 +347,10 @@ class Mouse(VectorSprite):
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        #if self.control == "mouse":
-        self.pos.x, self.pos.y = pygame.mouse.get_pos()[0], -pygame.mouse.get_pos()[1]
-        
+        if self.control == "mouse":
+             self.pos.x, self.pos.y = pygame.mouse.get_pos()[0], -pygame.mouse.get_pos()[1]
+            
+            
 
 class Flytext(VectorSprite):
     
@@ -659,7 +663,8 @@ class Viewer(object):
         y=-ty*10 + 5
         print(x,y)
         self.player = Player(pos=pygame.math.Vector2(x=x,y=y))
-        self.mouse1 = Mouse(control="mouse", color=(255,0,0))
+        self.mouse1 = Mouse(control = "mouse")
+        self.mouse2 = Mouse(control = "keyboard1", pos = pygame.math.Vector2(4.5, -4.5))
    
     def menu_run(self):
         running = True
@@ -804,6 +809,15 @@ class Viewer(object):
                     elif event.key == pygame.K_w:
                         if self.player.pos.y + 10 < 0:
                             self.player.pos += pygame.math.Vector2(0,10)
+                    elif event.key == pygame.K_UP:
+                        self.mouse2.pos.y += 10
+                    elif event.key == pygame.K_DOWN:
+                        self.mouse2.pos.y -= 10
+                    elif event.key == pygame.K_LEFT:
+                        self.mouse2.pos.x -= 10
+                    elif event.key == pygame.K_RIGHT:
+                        self.mouse2.pos.x += 10
+                    
                     #elif event.key == pygame.K_LSHIFT:
             
             # =========== delete everything on screen ==============
