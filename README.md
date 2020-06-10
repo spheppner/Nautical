@@ -1,5 +1,5 @@
-# mountainShooter
-A 2D Python LAN-Game with a randomly generated terrain in which you can build, shoot rockets and upgrade yourself.
+# Nautical
+A 2D Python LAN-Game with a randomly generated oceans. Based on an advenced battleship game.
 # Features
 ## 1) The Menu
 In the menu you will be able to either start a lan game or join one, set the resolution and to look at the contributors.
