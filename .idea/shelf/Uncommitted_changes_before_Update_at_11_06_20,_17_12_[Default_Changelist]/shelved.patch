@@ -1,0 +1,58 @@
+Index: battleship/game.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"\"\"game.py  the main battleship game (textmode)\nis expecting a file (csv file with numbers for height (0-255))\n\"\"\"\n\nclass Game:\n    world = []  # list of list\n    width = 0\n    height = 0\n\n    def __init__(self, mapfile=\"map001.csv\"):\n        with open(mapfile) as f:\n            lines = f.readlines()\n        for line in lines:\n            Game.world.append(line.split(\",\")[:-1])\n        Game.width = len(Game.world[0])\n        Game.height = len(Game.world)\n\n        print(\"----- game world {} x {}\".format(Game.width, Game.height))\n        for line in Game.world:\n            print(line)\n\nif __name__ == \"__main__\":\n    g = Game()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- battleship/game.py	(revision 98eceb491a42b75c6fcf79dee4de07e7a9a44367)
++++ battleship/game.py	(date 1591888207813)
+@@ -6,18 +6,32 @@
+     world = []  # list of list
+     width = 0
+     height = 0
++    fleets = []
++    startpoints = []
+ 
+-    def __init__(self, mapfile="map001.csv"):
++    def __init__(self, mapfile="map001.csv", starpoints="map001_startpoints.csv"):
+         with open(mapfile) as f:
+             lines = f.readlines()
+         for line in lines:
+-            Game.world.append(line.split(",")[:-1])
++            textvalues = line.split(",")[:-1]
++            intvalues = [int(x) for x in textvalues]
++            Game.world.append(intvalues)
+         Game.width = len(Game.world[0])
+         Game.height = len(Game.world)
+ 
++        with open(starpoints) as f:
++            lines = f.readlines()
++        for line in lines:
++            x,y = line.split(",")
++            x = int(x)
++            y = int(y)
++            Game.startpoints.append((x,y))
++
+         print("----- game world {} x {}".format(Game.width, Game.height))
+         for line in Game.world:
+             print(line)
++        print("-----startpoints----")
++        print(Game.startpoints)
+ 
+ if __name__ == "__main__":
+     g = Game()
+\ No newline at end of file
+Index: battleship/map001_startpoints.csv
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- battleship/map001_startpoints.csv	(date 1591888117506)
++++ battleship/map001_startpoints.csv	(date 1591888117506)
+@@ -0,0 +1,4 @@
++5,5
++5,14
++15,5
++15,14
+\ No newline at end of file
