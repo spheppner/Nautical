@@ -1,66 +1,89 @@
 import pygame
 
-def viewTerrain(terrain, screen, waterheight, player_number):
-    harbours = []
-    for y, line in enumerate(terrain):
-        for x, tile in enumerate(line):
-            h = int(terrain[y][x])
-            
-            if h <= waterheight:
-                c = (0,0,int(h/waterheight*255))
-            else:
-                c = (h, h, h)
-            if h == 0:
-                c = (255,0,0) # all harbours are hostile
-                harbours.append((y,x))
-            pygame.draw.rect(screen, c, (x*10, y*10,10,10))
-    # make friendly harbour green instead hostile-red
-    pygame.draw.rect(screen, (0,255,0),
-        (harbours[player_number][1]*10,harbours[player_number][0]*10,10,10))
+class Viewer:
+    width=1280
+    height=1024
+    grid_size = ()
 
-def viewer(mapname="terrain.txt", player_number=3):
-    with open(mapname, "r") as terrain_file:
-        lines = terrain_file.readlines()
-    terrain = []
-    for line in lines:
-        terrain.append(line.split(",")[:-1])
+    def __init__(self, width, height, mapname="terrain.txt", player_number=3):
+        Viewer.width = width
+        Viewer.height = height
+        self.player_number = player_number
+        with open(mapname, "r") as terrain_file:
+            lines = terrain_file.readlines()
+        self.terrain = []
+        for line in lines:
+            self.terrain.append(line.split(",")[:-1])
+        self.waterheight = 40
+        self.harbours = []
+        self.setup()
+        self.run()
 
-    pygame.init()
-    screen = pygame.display.set_mode((1280, 800), pygame.DOUBLEBUF)
-    background = pygame.Surface(screen.get_size()).convert()
-    background.fill((255, 255, 255))  # fill background white
+    def setup(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.width, self.height),
+                                              pygame.DOUBLEBUF)
+        self.background = pygame.Surface(self.screen.get_size()).convert()
+        self.background.fill((255, 255, 255))  # fill background white
+        self.clock = pygame.time.Clock()
+        self.fps = 60
+        self.playtime = 0.0
+        Viewer.grid_size = (10,10)
 
-    viewTerrain(terrain, background, 40, player_number)
+    def viewTerrain(self):
+        """paint map into self.background"""
+        for y, line in enumerate(self.terrain):
+            for x, tile in enumerate(line):
+                h = int(self.terrain[y][x])
+                if h <= self.waterheight:
+                    c = (0, 0, int(h / self.waterheight * 255))
+                else:
+                    c = (h, h, h)
+                if h == 0:
+                    c = (255, 0, 0)  # all harbours are hostile
+                    self.harbours.append((x, y))
+                pygame.draw.rect(self.background, c, (x * self.grid_size[0],
+                                             y * self.grid_size[1],
+                                             self.grid_size[0], self.grid_size[1]))
+        # make friendly harbour green instead hostile-red
+        pygame.draw.rect(self.background, (0, 255, 0),
+                         (self.harbours[self.player_number][0] * self.grid_size[0],
+                          self.harbours[self.player_number][1] * self.grid_size[1],
+                          self.grid_size[0], self.grid_size[1]))
 
-    clock = pygame.time.Clock()
-    fps = 60
-    playtime = 0.0
+    def pixel_to_grid(self, pixelxy):
+        x, y = pixelxy
+        return (x // self.grid_size[0], y // self.grid_size[1])
 
-    running = True
-    pygame.mouse.set_visible(True)
-    oldleft, oldmiddle, oldright = False, False, False
-    screen.blit(background, (0, 0))
-    while running:
-        pygame.display.set_caption("you are player # {}".format(player_number))
-        milliseconds = clock.tick(fps)  #
-        seconds = milliseconds / 1000
-        playtime += seconds
+    def run(self):
+        running = True
+        pygame.mouse.set_visible(True)
+        oldleft, oldmiddle, oldright = False, False, False
+        self.viewTerrain()
+        self.screen.blit(self.background, (0, 0))
 
-        # -------- events ------
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            # ------- pressed and released key ------
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+        while running:
+            (x,y) = self.pixel_to_grid(pygame.mouse.get_pos())
+            text = "you are player # {}. cursor at cell x:{} y:{}".format(
+                self.player_number,x,y )
+            pygame.display.set_caption(text)
+            milliseconds = self.clock.tick(self.fps)  #
+            seconds = milliseconds / 1000
+            self.playtime += seconds
+
+            # -------- events ------
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     running = False
-
-        # screen.blit(background, (0, 0))
-        pygame.display.flip()
-
+                # ------- pressed and released key ------
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+            # screen.blit(background, (0, 0))
+            pygame.display.flip()
 
 if __name__ == "__main__":
-    viewer()
+    Viewer(1280,1024)
     
 
     
