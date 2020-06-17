@@ -1,4 +1,5 @@
 import pygame
+import terrainGenerator
 
 def viewTerrain(terrain, screen, waterheight):
     
@@ -7,9 +8,11 @@ def viewTerrain(terrain, screen, waterheight):
             h = int(terrain[y][x])
             
             if h <= waterheight:
-                c = (int(h/waterheight*100),int(h/waterheight*100),int(h/waterheight*255))
+                c = (0,0,int(h/waterheight*255))
             else:
                 c = (h, h, h)
+            if h == 0:
+                c = (0,255,0)
             #if h < 15:
             #    c = (50, 50, 200)
             #elif h < 25:
@@ -28,6 +31,8 @@ def viewTerrain(terrain, screen, waterheight):
             pygame.draw.rect(screen, c, (x*10, y*10,10,10))
 
 if __name__ == "__main__":
+    
+    terrainGenerator.generateTerrain(50,50)
     
     with open("terrain.txt", "r") as terrain_file:
         lines = terrain_file.readlines()
