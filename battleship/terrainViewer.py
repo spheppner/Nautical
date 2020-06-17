@@ -1,5 +1,4 @@
 import pygame
-import terrainGenerator
 
 def viewTerrain(terrain, screen, waterheight):
     
@@ -32,7 +31,7 @@ def viewTerrain(terrain, screen, waterheight):
 
 if __name__ == "__main__":
     
-    terrainGenerator.generateTerrain(50,50)
+    #terrainGenerator.generateTerrain(50,50)
     
     with open("terrain.txt", "r") as terrain_file:
         lines = terrain_file.readlines()
