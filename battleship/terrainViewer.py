@@ -1,7 +1,7 @@
 import pygame
 
-def viewTerrain(terrain, screen, waterheight):
-    
+def viewTerrain(terrain, screen, waterheight, player_number):
+    harbours = []
     for y, line in enumerate(terrain):
         for x, tile in enumerate(line):
             h = int(terrain[y][x])
@@ -11,52 +11,38 @@ def viewTerrain(terrain, screen, waterheight):
             else:
                 c = (h, h, h)
             if h == 0:
-                c = (0,255,0)
-            #if h < 15:
-            #    c = (50, 50, 200)
-            #elif h < 25:
-            #    c = (25, 125, 225)
-            #elif h < 40:
-            #    c = (25, 125, 225)
-            #elif h < 50:
-            #    c = (175, 175, 175)
-            #elif h < 75:
-            #    c = (150, 150, 150)
-            #elif h < 100:
-            #    c = (125, 125, 125)
-            #elif h < 125:
-            #    c = (100, 100, 100)
-            
+                c = (255,0,0) # all harbours are hostile
+                harbours.append((y,x))
             pygame.draw.rect(screen, c, (x*10, y*10,10,10))
+    # make friendly harbour green instead hostile-red
+    pygame.draw.rect(screen, (0,255,0),
+        (harbours[player_number][1]*10,harbours[player_number][0]*10,10,10))
 
-if __name__ == "__main__":
-    
-    #terrainGenerator.generateTerrain(50,50)
-    
-    with open("terrain.txt", "r") as terrain_file:
+def viewer(mapname="terrain.txt", player_number=3):
+    with open(mapname, "r") as terrain_file:
         lines = terrain_file.readlines()
     terrain = []
     for line in lines:
         terrain.append(line.split(",")[:-1])
-    
+
     pygame.init()
     screen = pygame.display.set_mode((1280, 800), pygame.DOUBLEBUF)
     background = pygame.Surface(screen.get_size()).convert()
-    background.fill((255,255,255)) # fill background white
-    
-    viewTerrain(terrain,background, 40)
-    
+    background.fill((255, 255, 255))  # fill background white
+
+    viewTerrain(terrain, background, 40, player_number)
+
     clock = pygame.time.Clock()
     fps = 60
     playtime = 0.0
-    
+
     running = True
     pygame.mouse.set_visible(True)
-    oldleft, oldmiddle, oldright  = False, False, False
+    oldleft, oldmiddle, oldright = False, False, False
     screen.blit(background, (0, 0))
     while running:
-        
-        milliseconds = clock.tick(fps) #
+        pygame.display.set_caption("you are player # {}".format(player_number))
+        milliseconds = clock.tick(fps)  #
         seconds = milliseconds / 1000
         playtime += seconds
 
@@ -68,6 +54,13 @@ if __name__ == "__main__":
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                    
-        #screen.blit(background, (0, 0))
+
+        # screen.blit(background, (0, 0))
         pygame.display.flip()
+
+
+if __name__ == "__main__":
+    viewer()
+    
+
+    
