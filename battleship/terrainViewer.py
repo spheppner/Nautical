@@ -14,7 +14,7 @@ class Viewer:
         self.terrain = []
         for line in lines:
             self.terrain.append(line.split(",")[:-1])
-        self.waterheight = 40
+        self.waterheight = 0
         self.harbours = []
         self.setup()
         self.run()
@@ -35,10 +35,21 @@ class Viewer:
         for y, line in enumerate(self.terrain):
             for x, tile in enumerate(line):
                 h = int(self.terrain[y][x])
-                if h <= self.waterheight:
-                    c = (0, 0, int(h / self.waterheight * 255))
-                else:
-                    c = (h, h, h)
+                if h == self.waterheight:
+                    c = (0,0,255)
+                elif h < self.waterheight:
+                    c = (0, 0, 255-int(abs(h)))            
+                elif h < 50: # 0-50
+                    c = (0+h, 200+h, 0+h)
+                elif h < 100: # 50-100
+                    c = (h, 150, h)
+                elif h < 150: # 100-150
+                    c = (50+h, 255, 0)
+                elif h < 200: # 150-200
+                    c = (50+h, 255, 0)
+                elif h < 250: # 200-250
+                    c = (h,h,h)
+                     
                 if h == 0:
                     c = (255, 0, 0)  # all harbours are hostile
                     self.harbours.append((x, y))
