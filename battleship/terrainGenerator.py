@@ -42,10 +42,10 @@ def generateStartpoints(terrain, waterheight, numPlayers):
                         startpoints.append(random.choice(land))
     return startpoints
 
-def generateTerrain(tiles_x=20, tiles_y=20):
+def generateTerrain(tiles_x=20, tiles_y=20, waterheight=0):
     terrain = []
     
-    h = 60
+    h = -255
     # ----- 1st run -----
     # Basis-Höhe setzen
     for y in range(tiles_y):
@@ -54,17 +54,28 @@ def generateTerrain(tiles_x=20, tiles_y=20):
             height = h
             line.append(height)
         terrain.append(line)
-        
+    
     # ----- 2nd run -----
     # Zufälliges Höhen-Verändern der Felder
     for y in range(tiles_y):
         for x in range(tiles_x):
             old = terrain[y][x]
-            new = old + random.gauss(-50, -60)
+            new = old + random.gauss(waterheight, 75)
             new = min(255, new)
-            new = max(0, new)
+            new = max(-255, new)
             terrain[y][x] = round(new)
-            
+    
+    # ----- 3rd run -----
+    # Random Landmasses in the ocean (Volcanos)
+    volcanos = []
+    if tiles_y < 20 or tiles_x < 20:
+        raise SystemError("Map-Size must be at least 20x20!")
+    for y in range(10,tiles_y-10):
+        for x in range(10,tiles_x-10):
+            if random.random() < 0.025:
+                terrain[y][x] = random.randint(-150,200)
+                volcanos.append((y,x))
+    
     # ----- 3rd run -----
     # Landmasse in den Ecken
     #for y in range(tiles_y):
@@ -78,31 +89,62 @@ def generateTerrain(tiles_x=20, tiles_y=20):
     
     # ----- 4th run -----
     # Landmasse am Rand
-    for y in range(tiles_y):
-        for x in range(tiles_x):
-            if y == 0:
-                terrain[y][x] = 200
-            if x == 0:
-                terrain[y][x] = 200
-            if x == tiles_x-1:
-                terrain[y][x] = 200
-            if y == tiles_y-1:
-                terrain[y][x] = 200
+    #for y in range(tiles_y):
+    #    for x in range(tiles_x):
+    #        if y == 0:
+    #            terrain[y][x] = 255
+    #        if x == 0:
+    #            terrain[y][x] = 255
+    #        if x == tiles_x-1:
+    #            terrain[y][x] = 255
+    #        if y == tiles_y-1:
+    #            terrain[y][x] = 255
+    #        volcanos.append((y,x))
     
     # ----- 5th run -----
     # Vermischen der Höhen
+    for _ in range(10):
+        for y in range(tiles_y):
+            for x in range(tiles_x):
+                if (y,x) in volcanos:
+                    continue
+                summe = 0
+                neighbours = []
+                for (dx,dy) in ((-1,-1), (-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)):
+                     try:
+                         value = terrain[y+dy][x+dx]
+                     except:
+                         print("land out of index")
+                         continue
+                     neighbours.append(value)
+                # ------ 
+                ma = max(neighbours)
+                med = sum(neighbours) / len(neighbours)
+                if med < ma: 
+                    diff = ma-med
+                    new_diff = diff * 0.8
+                    new = ma - new_diff
+                    new = min(255, new)
+                    new = max(-255, new)
+                    terrain[y][x] = round(new)
+                else:
+                    #print("dies sollte nie vorkommen....")
+                    #med = min(255, med)
+                    #med = max(-255, med)
+                    #terrain[y][x] = round(med)   
+                    pass
+                
+                     
+    land_counter = 0
+    water_counter = 0
     for y in range(tiles_y):
         for x in range(tiles_x):
-            summe = 0
-            for (dx,dy) in ((-1,-1), (-1,0),(-1,1),(0,-1),(0,0),(0,1),(1,-1),(1,0),(1,1)):
-                 try:
-                     value = terrain[y+dy][x+dx]
-                 except:
-                     value = 0
-                 summe += value
-                 #summe += terrain[y+dy][x+dx]
-            wert = summe / 10
-            terrain[y][x] = round(wert)
+            if terrain[y][x] > 0:
+                land_counter += 1
+            else:
+                water_counter += 1
+    print(land_counter)
+    print(water_counter)
     
     startpoints = generateStartpoints(terrain, 40, 4)
     # ----- 6th run -----
@@ -112,7 +154,7 @@ def generateTerrain(tiles_x=20, tiles_y=20):
             for startpoint in startpoints:
                 if y == startpoint[0] and x == startpoint[1]:
                     terrain[y][x] = 0
-                     
+    
     with open("terrain.txt", "w") as terrain_file:
         print("Writing file...")
         for y in terrain:
@@ -124,4 +166,4 @@ def generateTerrain(tiles_x=20, tiles_y=20):
         
 
 if __name__ == "__main__":
-    generateTerrain(50,50)
+    generateTerrain(200,200,0)
