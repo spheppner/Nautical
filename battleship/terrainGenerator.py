@@ -149,12 +149,16 @@ def generateTerrain(tiles_x=20, tiles_y=20, waterheight=0):
     startpoints = generateStartpoints(terrain, 40, 4)
     # ----- 6th run -----
     # Setzen der Startpoints
-    for y in range(tiles_y):
-        for x in range(tiles_x):
-            for startpoint in startpoints:
-                if y == startpoint[0] and x == startpoint[1]:
-                    terrain[y][x] = 0
+    #for y in range(tiles_y):
+    #    for x in range(tiles_x):
+    #        for startpoint in startpoints:
+    #            if y == startpoint[0] and x == startpoint[1]:
+    #                terrain[y][x] = 0
     
+    with open("startpoints.txt", "w") as startpoint_file:
+        for startpoint in startpoints:
+            startpoint_file.write("(" + str(startpoint[0]) + "," + str(startpoint[1]) + "),")
+            
     with open("terrain.txt", "w") as terrain_file:
         print("Writing file...")
         for y in terrain:
@@ -166,4 +170,4 @@ def generateTerrain(tiles_x=20, tiles_y=20, waterheight=0):
         
 
 if __name__ == "__main__":
-    generateTerrain(200,200,0)
+    generateTerrain(100,100,0)
