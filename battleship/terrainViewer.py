@@ -14,6 +14,22 @@ class Viewer:
         self.terrain = []
         for line in lines:
             self.terrain.append(line.split(",")[:-1])
+        self.startpoints = []
+        with open("startpoints.txt", "r") as startpoints_file:
+            line = startpoints_file.read().split(",")[:-1]
+        print(line)
+        xlist = []
+        ylist = []
+        for i, element in enumerate(line):
+            if i%2==0:
+                xlist.append(int(element))
+            else:
+                ylist.append(int(element))
+        self.startpoints = list(zip(xlist, ylist))
+        print(self.startpoints)
+            
+        
+        
         self.waterheight = 0
         self.harbours = []
         self.setup()
@@ -49,15 +65,15 @@ class Viewer:
                     c = (50+h, 255, 0)
                 elif h < 250: # 200-250
                     c = (h,h,h)
-                     
-                if h == 0:
-                    c = (255, 0, 0)  # all harbours are hostile
-                    self.harbours.append((x, y))
+                for startpoint in self.startpoints:
+                    if y == startpoint[0] and x == startpoint[1]:
+                        c = (255, 0, 0)  # all harbours are hostile
+                        self.harbours.append((x, y))
                 pygame.draw.rect(self.background, c, (x * self.grid_size[0],
                                              y * self.grid_size[1],
                                              self.grid_size[0], self.grid_size[1]))
         # make friendly harbour green instead hostile-red
-        pygame.draw.rect(self.background, (0, 255, 0),
+        pygame.draw.rect(self.background, (255, 0, 255),
                          (self.harbours[self.player_number][0] * self.grid_size[0],
                           self.harbours[self.player_number][1] * self.grid_size[1],
                           self.grid_size[0], self.grid_size[1]))
