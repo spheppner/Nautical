@@ -78,16 +78,17 @@ def generateTerrain(tiles_x=20, tiles_y=20, waterheight=0):
     
     # ----- 3rd run -----
     # Landmasse in den Ecken
-    #for y in range(tiles_y):
-    #    for x in range(tiles_x):
-    #        for (posy,posx) in ((1,0),(1,1),(0,1),(1, tiles_x-1),(1, tiles_x-2),(0, tiles_x-2),(tiles_y-2,tiles_x-1),(tiles_y-2,tiles_x-2),(tiles_y-1,tiles_x-2),(tiles_y-2,0),(tiles_y-2,1),(tiles_y-1,1)):
-    #            if y == posy and x == posx:
-    #                terrain[y][x] = 110
-    #        for (posy,posx) in ((0,0),(0, tiles_x-1),(tiles_y-1,tiles_x-1),(tiles_y-1,0)):
-    #            if y == posy and x == posx:
-    #                terrain[y][x] = 130
+    for y in range(tiles_y):
+        for x in range(tiles_x):
+            #for (posy,posx) in ((1,0),(1,1),(0,1),(1, tiles_x-1),(1, tiles_x-2),(0, tiles_x-2),(tiles_y-2,tiles_x-1),(tiles_y-2,tiles_x-2),(tiles_y-1,tiles_x-2),(tiles_y-2,0),(tiles_y-2,1),(tiles_y-1,1)):
+            #    if y == posy and x == posx:
+            #        terrain[y][x] = random.randint(200,255)
+            if (y,x) in ((0,0),(0, tiles_x-1),(tiles_y-1,tiles_x-1),(tiles_y-1,0)):
+                #if y == posy and x == posx:
+                terrain[y][x] = random.randint(200,250)
+                volcanos.append((y,x))
     
-    # ----- 4th run -----
+    # ----- 4th run#
     # Landmasse am Rand
     #for y in range(tiles_y):
     #    for x in range(tiles_x):
