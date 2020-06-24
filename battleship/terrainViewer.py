@@ -1,8 +1,9 @@
 import pygame
 
+
 class Viewer:
-    width=1280
-    height=1024
+    width = 1280
+    height = 1024
     grid_size = ()
 
     def __init__(self, width, height, mapname="terrain.txt", player_number=3):
@@ -21,15 +22,13 @@ class Viewer:
         xlist = []
         ylist = []
         for i, element in enumerate(line):
-            if i%2==0:
+            if i % 2 == 0:
                 xlist.append(int(element))
             else:
                 ylist.append(int(element))
         self.startpoints = list(zip(xlist, ylist))
         print(self.startpoints)
-            
-        
-        
+
         self.waterheight = 0
         self.harbours = []
         self.setup()
@@ -44,7 +43,7 @@ class Viewer:
         self.clock = pygame.time.Clock()
         self.fps = 60
         self.playtime = 0.0
-        Viewer.grid_size = (10,10)
+        Viewer.grid_size = (10, 10)
 
     def viewTerrain(self):
         """paint map into self.background"""
@@ -52,26 +51,29 @@ class Viewer:
             for x, tile in enumerate(line):
                 h = int(self.terrain[y][x])
                 if h == self.waterheight:
-                    c = (0,0,255)
+                    c = (0, 0, 255)
                 elif h < self.waterheight:
-                    c = (0, 0, 255-int(abs(h)))            
-                elif h < 50: # 0-50
-                    c = (0+h, 200+h, 0+h)
-                elif h < 100: # 50-100
-                    c = (h, 150, h)
-                elif h < 150: # 100-150
-                    c = (50+h, 255, 0)
-                elif h < 200: # 150-200
-                    c = (50+h, 255, 0)
-                elif h < 250: # 200-250
-                    c = (h,h,h)
+                    c = (0, 0, 255 - int(abs(h)))
+                # land check
+                #elif h < 50:  # 0-50
+                #    c = (0 + h, 200 + h, 0 + h)
+                #elif h < 100:  # 50-100
+                #    c = (h, 150, h)
+                #elif h < 150:  # 100-150
+                #    c = (50 + h, 255, 0)
+                #elif h < 200:  # 150-200
+                #    c = (50 + h, 255, 0)
+                #elif h < 250:  # 200-250
+                #    c = (h, h, h)
+                else:
+                    c = (h,255-min(255,h*2.5) if h<65 else h,h)
                 for startpoint in self.startpoints:
                     if y == startpoint[0] and x == startpoint[1]:
                         c = (255, 0, 0)  # all harbours are hostile
                         self.harbours.append((x, y))
                 pygame.draw.rect(self.background, c, (x * self.grid_size[0],
-                                             y * self.grid_size[1],
-                                             self.grid_size[0], self.grid_size[1]))
+                                                      y * self.grid_size[1],
+                                                      self.grid_size[0], self.grid_size[1]))
         # make friendly harbour green instead hostile-red
         pygame.draw.rect(self.background, (255, 0, 255),
                          (self.harbours[self.player_number][0] * self.grid_size[0],
@@ -90,9 +92,9 @@ class Viewer:
         self.screen.blit(self.background, (0, 0))
 
         while running:
-            (x,y) = self.pixel_to_grid(pygame.mouse.get_pos())
+            (x, y) = self.pixel_to_grid(pygame.mouse.get_pos())
             text = "you are player # {}. cursor at cell x:{} y:{}".format(
-                self.player_number,x,y )
+                self.player_number, x, y)
             pygame.display.set_caption(text)
             milliseconds = self.clock.tick(self.fps)  #
             seconds = milliseconds / 1000
@@ -109,8 +111,9 @@ class Viewer:
             # screen.blit(background, (0, 0))
             pygame.display.flip()
 
-if __name__ == "__main__":
-    Viewer(1280,1024)
-    
 
-    
+if __name__ == "__main__":
+    Viewer(1280, 1024)
+
+
+
