@@ -31,6 +31,7 @@ class Viewer:
 
         self.waterheight = 0
         self.harbours = []
+        self.colorMap = []
         self.setup()
         self.run()
 
@@ -43,10 +44,21 @@ class Viewer:
         self.clock = pygame.time.Clock()
         self.fps = 60
         self.playtime = 0.0
-        Viewer.grid_size = (10, 10)
+        Viewer.grid_size = [10, 10]
+        self.radar_grid_size = [6, 6]
+        self.panel_width = Viewer.width - (len(self.terrain[0]) * Viewer.grid_size[0])
+        self.panel = pygame.Surface((self.panel_width, Viewer.height))
+        self.makeTerrainMap()
+        self.draw_panel()
 
-    def viewTerrain(self):
+    def draw_panel(self):
+        self.panel.fill((255,165,0))
+        self.panel.blit(self.paintMap(self.radar_grid_size), (self.panel_width-(self.radar_grid_size[0]*len(self.terrain[0])),0))
+
+    def makeTerrainMap(self):
         """paint map into self.background"""
+        self.harbours = []
+        self.colorMap = self.terrain.copy()
         for y, line in enumerate(self.terrain):
             for x, tile in enumerate(line):
                 h = int(self.terrain[y][x])
@@ -54,31 +66,28 @@ class Viewer:
                     c = (0, 0, 255)
                 elif h < self.waterheight:
                     c = (0, 0, 255 - int(abs(h)))
-                # land check
-                #elif h < 50:  # 0-50
-                #    c = (0 + h, 200 + h, 0 + h)
-                #elif h < 100:  # 50-100
-                #    c = (h, 150, h)
-                #elif h < 150:  # 100-150
-                #    c = (50 + h, 255, 0)
-                #elif h < 200:  # 150-200
-                #    c = (50 + h, 255, 0)
-                #elif h < 250:  # 200-250
-                #    c = (h, h, h)
                 else:
                     c = (h,255-min(255,h*2.5) if h<65 else h,h)
                 for startpoint in self.startpoints:
                     if y == startpoint[0] and x == startpoint[1]:
                         c = (255, 0, 0)  # all harbours are hostile
                         self.harbours.append((x, y))
-                pygame.draw.rect(self.background, c, (x * self.grid_size[0],
-                                                      y * self.grid_size[1],
-                                                      self.grid_size[0], self.grid_size[1]))
+                self.colorMap[y][x] = c
+
+    def paintMap(self, grid_size):
+        """Return Pygame surface with map"""
+        mapSurface = pygame.Surface((grid_size[0]*len(self.terrain[0]), grid_size[1]*len(self.terrain[0])))
+        for y, line in enumerate(self.colorMap):
+            for x, c in enumerate(line):
+                pygame.draw.rect(mapSurface, c, (x * grid_size[0],
+                                                      y * grid_size[1],
+                                                      grid_size[0], grid_size[1]))
         # make friendly harbour green instead hostile-red
-        pygame.draw.rect(self.background, (255, 0, 255),
-                         (self.harbours[self.player_number][0] * self.grid_size[0],
-                          self.harbours[self.player_number][1] * self.grid_size[1],
-                          self.grid_size[0], self.grid_size[1]))
+        pygame.draw.rect(mapSurface, (255, 0, 255),
+                         (self.harbours[self.player_number][0] * grid_size[0],
+                          self.harbours[self.player_number][1] * grid_size[1],
+                          grid_size[0], grid_size[1]))
+        return mapSurface
 
     def pixel_to_grid(self, pixelxy):
         x, y = pixelxy
@@ -88,13 +97,16 @@ class Viewer:
         running = True
         pygame.mouse.set_visible(True)
         oldleft, oldmiddle, oldright = False, False, False
-        self.viewTerrain()
+        #self.viewTerrain()
         self.screen.blit(self.background, (0, 0))
+        self.screen.blit(self.paintMap(self.grid_size), (0,0))
+        self.screen.blit(self.panel, (Viewer.width-self.panel_width, 0))
 
         while running:
             (x, y) = self.pixel_to_grid(pygame.mouse.get_pos())
-            text = "you are player # {}. cursor at cell x:{} y:{}".format(
-                self.player_number, x, y)
+            text = "You are player #{}. Cursor in cell x:{} y:{} | FPS: {:.2f}".format(
+                self.player_number, x, y, self.clock.get_fps())
+
             pygame.display.set_caption(text)
             milliseconds = self.clock.tick(self.fps)  #
             seconds = milliseconds / 1000
@@ -108,12 +120,15 @@ class Viewer:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-            # screen.blit(background, (0, 0))
+
+            #screen.blit(background, (0, 0))
             pygame.display.flip()
+
+        pygame.quit()
 
 
 if __name__ == "__main__":
-    Viewer(1280, 1024)
+    Viewer(1680, 1020)
 
 
 
