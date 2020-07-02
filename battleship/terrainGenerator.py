@@ -202,5 +202,6 @@ def generateTerrain(tiles_x=20, tiles_y=20, waterheight=0):
     print("Finished!")
 
 
+
 if __name__ == "__main__":
-    generateTerrain(100, 100, 0)
+    generateTerrain(102, 102, 0)
