@@ -1,10 +1,11 @@
 import pygame
-
+import random
 
 class Viewer:
     width = 1280
     height = 1024
     grid_size = ()
+    viewport = [0,0,50,50]
 
     def __init__(self, width, height, mapname="terrain.txt", player_number=3):
         Viewer.width = width
@@ -45,6 +46,7 @@ class Viewer:
         self.fps = 60
         self.playtime = 0.0
         Viewer.grid_size = [10, 10]
+        Viewer.viewport = [0,0,len(self.terrain[0]), len(self.terrain)]
         self.radar_grid_size = [6, 6]
         self.panel_width = Viewer.width - (len(self.terrain[0]) * Viewer.grid_size[0])
         self.panel = pygame.Surface((self.panel_width, Viewer.height))
@@ -52,8 +54,14 @@ class Viewer:
         self.draw_panel()
 
     def draw_panel(self):
+        dx = self.panel_width-(self.radar_grid_size[0]*len(self.terrain[0]))
         self.panel.fill((255,165,0))
-        self.panel.blit(self.paintMap(self.radar_grid_size), (self.panel_width-(self.radar_grid_size[0]*len(self.terrain[0])),0))
+        self.panel.blit(self.paintMap(self.radar_grid_size), (dx,0))
+        c = random.randint(128,255)
+        pygame.draw.rect(self.panel, (c,c,c), (Viewer.viewport[0]*self.radar_grid_size[0]+dx,
+                                               Viewer.viewport[1]*self.radar_grid_size[1],
+                                               (Viewer.viewport[2]-Viewer.viewport[0])*self.radar_grid_size[0],
+                                               (Viewer.viewport[3]-Viewer.viewport[1])*self.radar_grid_size[1]), 3)
 
     def makeTerrainMap(self):
         """paint map into self.background"""
@@ -93,15 +101,19 @@ class Viewer:
         x, y = pixelxy
         return (x // self.grid_size[0], y // self.grid_size[1])
 
+    def redraw(self):
+        self.screen.blit(self.background, (0, 0))
+        self.screen.blit(self.paintMap(self.grid_size), (0-Viewer.viewport[0]*self.grid_size[0],
+                                                         0-Viewer.viewport[1]*self.grid_size[1]))
+        self.draw_panel()
+        self.screen.blit(self.panel, (Viewer.width - self.panel_width, 0))
+
     def run(self):
         running = True
         pygame.mouse.set_visible(True)
         oldleft, oldmiddle, oldright = False, False, False
         #self.viewTerrain()
-        self.screen.blit(self.background, (0, 0))
-        self.screen.blit(self.paintMap(self.grid_size), (0,0))
-        self.screen.blit(self.panel, (Viewer.width-self.panel_width, 0))
-
+        self.redraw()
         while running:
             (x, y) = self.pixel_to_grid(pygame.mouse.get_pos())
             text = "You are player #{}. Cursor in cell x:{} y:{} | FPS: {:.2f}".format(
@@ -120,15 +132,52 @@ class Viewer:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    elif event.key == pygame.K_1:
+                        self.grid_size[0] += 1
+                        self.grid_size[1] += 1
+                        maptilesx = (Viewer.width - self.panel_width) // self.grid_size[0]
+                        maptilesy = (Viewer.height - 0) // self.grid_size[1]
+                        Viewer.viewport[2] = maptilesx
+                        Viewer.viewport[3] = maptilesy
+                        #self.redraw()
+                    elif event.key == pygame.K_2:
+                        self.grid_size[0] -= 1
+                        self.grid_size[1] -= 1
+                        maptilesx = (Viewer.width - self.panel_width) // self.grid_size[0]
+                        maptilesy = (Viewer.height - 0) // self.grid_size[1]
+                        Viewer.viewport[2] = maptilesx
+                        Viewer.viewport[3] = maptilesy
+                        #self.redraw()
+                    elif event.key == pygame.K_3:
+                        self.radar_grid_size[0] += 1
+                        self.radar_grid_size[1] += 1
+                        #self.redraw()
+                    elif event.key == pygame.K_4:
+                        self.radar_grid_size[0] -= 1
+                        self.radar_grid_size[1] -= 1
+                        #self.redraw()
+                    elif event.key == pygame.K_KP8:
+                        Viewer.viewport[1] -= 1
+                        Viewer.viewport[3] -= 1
+                    elif event.key == pygame.K_KP2:
+                        Viewer.viewport[1] += 1
+                        Viewer.viewport[3] += 1
+                    elif event.key == pygame.K_KP4:
+                        Viewer.viewport[0] -= 1
+                        Viewer.viewport[2] -= 1
+                    elif event.key == pygame.K_KP6:
+                        Viewer.viewport[0] += 1
+                        Viewer.viewport[2] += 1
 
             #screen.blit(background, (0, 0))
+            self.redraw()
             pygame.display.flip()
 
         pygame.quit()
 
 
 if __name__ == "__main__":
-    Viewer(1680, 1020)
+    Viewer(1680, 1000)
 
 
 
