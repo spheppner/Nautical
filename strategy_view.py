@@ -1,5 +1,5 @@
 # strategy_view.py
-# ... existing Camera class code ...
+# ... (Camera class is unchanged) ...
 import pygame
 from settings import *
 from world import World
@@ -22,12 +22,10 @@ class Camera:
     def update(self, target):
         x = -target.rect.centerx + int(SCREEN_WIDTH / 2)
         y = -target.rect.centery + int(SCREEN_HEIGHT / 2)
-
-        # Limit scrolling to map size
-        x = min(0, x)  # left
-        y = min(0, y)  # top
-        x = max(-(self.width - SCREEN_WIDTH), x)  # right
-        y = max(-(self.height - SCREEN_HEIGHT), y)  # bottom
+        x = min(0, x)
+        y = min(0, y)
+        x = max(-(self.width - SCREEN_WIDTH), x)
+        y = max(-(self.height - SCREEN_HEIGHT), y)
         self.camera = pygame.Rect(x, y, self.width, self.height)
 
 
@@ -37,101 +35,116 @@ class StrategyView:
         self.world = None
         self.camera = None
         self.all_sprites = pygame.sprite.Group()
+        self.sprite_map = {}  # Maps unit_id to sprite object for quick lookup
         self.selected_unit = None
-        self.end_turn_button = Button(SCREEN_WIDTH - 220, SCREEN_HEIGHT - 70, 200, 50, "End Turn", self.resolve_turn)
+        self.pending_commands = []
+        self.submit_turn_button = Button(SCREEN_WIDTH - 220, SCREEN_HEIGHT - 70, 200, 50, "Submit Turn", self.submit_turn)
+        self.fog_surface = None
 
-    def setup_game(self, lobby_data):
-        self.world = World()
+    def initialize_from_gamestate(self, initial_state):
+        """Builds the game world and sprites from the server's initial state."""
+        print("Initializing strategy view from server state...")
+        self.world = World(seed=initial_state['world_seed'])
         self.camera = Camera(WORLD_WIDTH, WORLD_HEIGHT)
         self.all_sprites.empty()
+        self.sprite_map.clear()
 
-        # Define starting positions
-        start_positions = [
-            (200, 200),
-            (WORLD_WIDTH - 200, WORLD_HEIGHT - 200),
-            (200, WORLD_HEIGHT - 200),
-            (WORLD_WIDTH - 200, 200)
-        ]
+        self.fog_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT))
+        self.fog_surface.fill(FOG_COLOR)
 
-        players = lobby_data['players']
-        for i, player in enumerate(players):
-            player_id = player['id']
-            pos = start_positions[i % len(start_positions)]  # Cycle through start positions
+        for unit_id, unit_data in initial_state['units'].items():
+            pos = unit_data['pos']
+            unit_type = unit_data['type']
+            player_owner = unit_data['owner']
 
-            # Give each player one of each ship type for now
-            cruiser = ArtilleryCruiser(pos, player_owner=player_id)
-            scout_pos = (pos[0] + 50, pos[1] + 50)
-            scout = ScoutShip(scout_pos, player_owner=player_id)
-            self.all_sprites.add(cruiser, scout)
+            sprite = None
+            if unit_type == 'cruiser':
+                sprite = ArtilleryCruiser(pos, player_owner, unit_id)
+            elif unit_type == 'scout':
+                sprite = ScoutShip(pos, player_owner, unit_id)
+            elif unit_type == 'command_center':
+                sprite = CommandCenter(pos, player_owner, unit_id)
 
-    def resolve_turn(self):
-        print("Resolving turn...")
-        for sprite in self.all_sprites:
-            sprite.update(1.0, self.world)
+            if sprite:
+                self.all_sprites.add(sprite)
+                self.sprite_map[unit_id] = sprite
+        print(f"Created {len(self.all_sprites)} sprites.")
+
+    def submit_turn(self):
+        print("Submitting commands to server...")
+        self.game_manager.network_client.send_commands(self.pending_commands)
+        self.pending_commands = []
 
     def on_enter(self, data=None):
-        if data and 'lobby' in data:
-            self.setup_game(data['lobby'])
+        if data and 'initial_state' in data:
+            self.initialize_from_gamestate(data['initial_state'])
         elif data and 'combat_results' in data:
             print(f"Combat results received: {data['combat_results']}")
 
     def handle_event(self, event):
-        self.end_turn_button.handle_event(event)
+        if not self.world: return
+        self.submit_turn_button.handle_event(event)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             world_pos = self.get_mouse_world_pos()
-            if event.button == 1:  # Left click - selection
+            if event.button == 1:  # Left click
                 self.selected_unit = None
                 for sprite in self.all_sprites:
-                    # Allow selecting only your own units
+                    sprite.selected = False
                     if sprite.player_owner == self.game_manager.network_client.player_id:
                         if sprite.rect.collidepoint(world_pos):
                             self.selected_unit = sprite
                             sprite.selected = True
-                        else:
-                            sprite.selected = False
 
-            if event.button == 3:  # Right click - set target
-                if self.selected_unit:
+            if event.button == 3:  # Right click
+                if self.selected_unit and self.world.is_land(pygame.math.Vector2(world_pos)) == False:
                     self.selected_unit.set_target(world_pos)
-
-            if event.button == 2:  # Middle click - Initiate combat (for testing)
-                if self.selected_unit:
-                    for sprite in self.all_sprites:
-                        if sprite.rect.collidepoint(world_pos) and sprite.player_owner != self.selected_unit.player_owner:
-                            dist = self.selected_unit.pos.distance_to(sprite.pos)
-                            if isinstance(self.selected_unit, ArtilleryCruiser) and dist < self.selected_unit.fire_range:
-                                combat_data = {
-                                    'attacker': self.selected_unit,
-                                    'defender': sprite,
-                                    'world_sector': self.world
-                                }
-                                self.game_manager.change_state("COMBAT", combat_data)
-                                return  # Prevent further processing
+                    command = {
+                        'action': 'move',
+                        'unit_id': self.selected_unit.unique_id,
+                        'target': world_pos
+                    }
+                    self.pending_commands.append(command)
 
     def update(self, dt):
-        if not self.camera: return  # Don't update if game not set up
+        if not self.camera: return
+        client = self.game_manager.network_client
+        if client and client.last_message and client.last_message['type'] == 'game_update':
+            game_state = client.last_message['payload']
+            for unit_id, unit_data in game_state['units'].items():
+                if unit_id in self.sprite_map:
+                    self.sprite_map[unit_id].update_from_state(unit_data)
+            client.last_message = None
+
+        self.all_sprites.update()
+
         keys = pygame.key.get_pressed()
         cam_speed = 500 * dt
         if keys[pygame.K_LEFT]: self.camera.camera.x += cam_speed
         if keys[pygame.K_RIGHT]: self.camera.camera.x -= cam_speed
         if keys[pygame.K_UP]: self.camera.camera.y += cam_speed
         if keys[pygame.K_DOWN]: self.camera.camera.y -= cam_speed
-
         self.camera.camera.x = max(-(WORLD_WIDTH - SCREEN_WIDTH), min(0, self.camera.camera.x))
         self.camera.camera.y = max(-(WORLD_HEIGHT - SCREEN_HEIGHT), min(0, self.camera.camera.y))
 
     def draw(self, screen):
-        if not self.world:  # Don't draw if game not set up
-            return
+        if not self.world: return
         screen.blit(self.world.map_surface, self.camera.camera.topleft)
+
+        if self.fog_surface:
+            self.fog_surface.fill(FOG_COLOR)
+            my_player_id = self.game_manager.network_client.player_id
+            for sprite in self.all_sprites:
+                if sprite.player_owner == my_player_id:
+                    pygame.draw.circle(self.fog_surface, (0, 0, 0, 0), sprite.pos, sprite.radar_range)
+            screen.blit(self.fog_surface, self.camera.camera.topleft, special_flags=pygame.BLEND_RGBA_MULT)
 
         for sprite in self.all_sprites:
             screen.blit(sprite.image, self.camera.apply(sprite.rect))
             if sprite.player_owner == self.game_manager.network_client.player_id:
                 sprite.draw_extras(screen, self.camera)
 
-        self.end_turn_button.draw(screen)
+        self.submit_turn_button.draw(screen)
 
     def get_mouse_world_pos(self):
         mouse_pos = pygame.mouse.get_pos()

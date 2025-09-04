@@ -2,7 +2,7 @@
 import pygame
 import random
 import math
-from noise import pnoise2
+from perlin import PerlinNoise  # <--- Changed from 'noise' library
 from settings import *
 
 
@@ -14,13 +14,14 @@ class World:
     def __init__(self, seed):
         self.seed = seed
         self.terrain_data = []
+        self.perlin = PerlinNoise(octaves=4, seed=self.seed)  # <--- Instantiated our own class
         self.generate_terrain()
         self.map_surface = self.create_map_surface()
         self.valid_start_islands = self.find_valid_start_islands()
 
     def generate_terrain(self):
         """
-        Creates a 2D array of height values using Perlin noise and a radial gradient
+        Creates a 2D array of height values using our internal Perlin noise generator and a radial gradient
         to form a central ocean with islands.
         """
         self.terrain_data = [[0 for _ in range(WORLD_TILES_X)] for _ in range(WORLD_TILES_Y)]
@@ -28,16 +29,15 @@ class World:
 
         for y in range(WORLD_TILES_Y):
             for x in range(WORLD_TILES_X):
-                # Perlin noise for natural-looking terrain
-                noise_val = pnoise2(x * 0.05, y * 0.05, octaves=4, persistence=0.5, lacunarity=2.0, base=self.seed)
+                # Use our PerlinNoise class instance
+                noise_val = self.perlin.noise(x * 0.05, y * 0.05)  # <--- Updated call
 
                 # Radial gradient to create a central ocean
                 dist_to_center = math.sqrt((x - center_x) ** 2 + (y - center_y) ** 2)
                 max_dist = math.sqrt(center_x ** 2 + center_y ** 2)
-                gradient = dist_to_center / max_dist  # 0 at center, 1 at corners
+                gradient = dist_to_center / max_dist
 
                 # Combine noise with the gradient
-                # This makes the center lower (water) and edges higher (land)
                 height = (noise_val + (1.0 - gradient)) * 128 + 64
 
                 self.terrain_data[y][x] = max(0, min(255, height))
@@ -72,7 +72,6 @@ class World:
         random.shuffle(islands)
         return islands
 
-    # ... (rest of the class remains the same: get_tile_color, create_map_surface, etc.) ...
     def get_tile_color(self, height):
         """Determine color based on height."""
         if height < WATER_LEVEL:

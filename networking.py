@@ -5,6 +5,7 @@ import socket
 import pickle
 import threading
 import time
+import random
 
 HEADER_LENGTH = 10
 
@@ -78,9 +79,10 @@ class NetworkClient:
             self.connected = False
 
     def disconnect(self):
-        self.connected = False
-        self.client_socket.close()
-        print("Disconnected from server.")
+        if self.connected:
+            self.connected = False
+            self.client_socket.close()
+            print("Disconnected from server.")
 
 
 class NetworkServer:
@@ -90,10 +92,12 @@ class NetworkServer:
         self.max_clients = max_clients
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clients = {}  # conn: player_id
-        self.client_data = {}  # conn: data
+        self.client_commands = {}  # player_id: commands
         self.player_counter = 1
         self.running = False
+        self.game_started = False
         self.lobby_state = {'players': []}
+        self.lock = threading.Lock()
         print("Networking server initialized.")
 
     def start(self):
@@ -109,32 +113,31 @@ class NetworkServer:
 
     def lobby_updater(self):
         """Periodically sends the lobby state to all clients."""
-        while self.running:
-            self.update_lobby_state()
-            self.broadcast_message({'type': 'lobby_update', 'payload': self.lobby_state})
-            time.sleep(1)  # Send update every second
+        while self.running and not self.game_started:
+            with self.lock:
+                self.update_lobby_state()
+                self.broadcast_message({'type': 'lobby_update', 'payload': self.lobby_state})
+            time.sleep(1)
 
     def accept_connections(self):
         print("Server is waiting for connections...")
-        while self.running:
+        while self.running and not self.game_started:
             try:
                 conn, addr = self.server_socket.accept()
-                if len(self.clients) < self.max_clients:
-                    player_id = self.player_counter
-                    self.player_counter += 1
+                with self.lock:
+                    if len(self.clients) < self.max_clients:
+                        player_id = self.player_counter
+                        self.player_counter += 1
 
-                    print(f"Accepted connection from {addr}, assigned Player ID {player_id}")
-                    self.clients[conn] = player_id
-                    self.client_data[conn] = None
+                        print(f"Accepted connection from {addr}, assigned Player ID {player_id}")
+                        self.clients[conn] = player_id
+                        self.client_commands[player_id] = []
 
-                    # Send welcome message
-                    welcome_msg = {'type': 'welcome', 'payload': {'id': player_id}}
-                    self.send_message(conn, welcome_msg)
-
-                    threading.Thread(target=self.client_handler, args=(conn, addr), daemon=True).start()
-                else:
-                    print(f"Refused connection from {addr}: Server is full.")
-                    conn.close()
+                        self.send_message(conn, {'type': 'welcome', 'payload': {'id': player_id}})
+                        threading.Thread(target=self.client_handler, args=(conn, addr), daemon=True).start()
+                    else:
+                        print(f"Refused connection from {addr}: Server is full.")
+                        conn.close()
             except socket.error:
                 break
 
@@ -146,22 +149,70 @@ class NetworkServer:
 
                 message_length = int(message_header.decode('utf-8').strip())
                 full_message = pickle.loads(conn.recv(message_length))
-                self.client_data[conn] = full_message['payload']
+
+                player_id = self.clients.get(conn)
+                if not player_id: continue
+
+                if full_message['type'] == 'client_commands':
+                    with self.lock:
+                        self.client_commands[player_id] = full_message['payload']
+
+                elif full_message['type'] == 'start_game_request':
+                    if player_id == 1:  # Only host can start
+                        print("Host requested to start the game.")
+                        self.start_game()
 
             except (ConnectionResetError, EOFError, pickle.UnpicklingError):
                 break
 
         print(f"Connection from {addr} closed.")
-        player_id = self.clients.pop(conn, None)
-        self.client_data.pop(conn, None)
+        with self.lock:
+            player_id = self.clients.pop(conn, None)
+            if player_id:
+                self.client_commands.pop(player_id, None)
         conn.close()
-        self.update_lobby_state()
 
     def update_lobby_state(self):
         self.lobby_state['players'] = [{'id': pid, 'addr': conn.getpeername()} for conn, pid in self.clients.items()]
 
+    def start_game(self):
+        from world import World
+        from settings import SHIP_STATS
+
+        with self.lock:
+            if self.game_started: return
+            self.game_started = True
+            print("Initializing and broadcasting start_game state...")
+
+            world_seed = random.randint(0, 10000)
+            world = World(seed=world_seed)
+            start_positions = world.valid_start_islands
+
+            initial_state = {'world_seed': world_seed, 'units': {}}
+            unit_id_counter = 0
+
+            for i, player_id in enumerate(self.client_commands.keys()):
+                if i < len(start_positions):
+                    pos = start_positions[i]
+                    # Create units for this player
+                    for unit_type in ['command_center', 'cruiser', 'scout']:
+                        unit_id = unit_id_counter
+                        unit_pos = (pos[0] + random.randint(-20, 20), pos[1] + random.randint(-20, 20))
+                        initial_state['units'][unit_id] = {
+                            'id': unit_id, 'type': unit_type, 'owner': player_id,
+                            'pos': unit_pos, 'hp': SHIP_STATS[unit_type]['hp']
+                        }
+                        unit_id_counter += 1
+
+            self.broadcast_message({'type': 'start_game', 'payload': initial_state})
+            threading.Thread(target=self.game_loop, daemon=True).start()
+
+    def game_loop(self):
+        # ... (This logic will be implemented later) ...
+        print("Server game loop is running.")
+        pass
+
     def broadcast_message(self, message_data):
-        if not self.clients: return
         for client_conn in list(self.clients.keys()):
             self.send_message(client_conn, message_data)
 
@@ -171,14 +222,12 @@ class NetworkServer:
             header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
             conn.sendall(header + message)
         except socket.error:
-            # Client disconnected, will be handled by its handler thread
             pass
 
     def stop(self):
         self.running = False
         for client in self.clients:
             client.close()
-        # self.server_socket.shutdown(socket.SHUT_RDWR) # More forceful
         self.server_socket.close()
         print("Server stopped.")
 
