@@ -1,67 +1,91 @@
-# Centralized file for game constants.
+# settings.py
+# Centralized file for all game constants and configuration.
 
-# Screen dimensions
+# Screen and Display
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 FPS = 60
+TITLE = "Nautical: LAN Edition"
+
+# Networking
+SERVER_HOST = "0.0.0.0" # Host on all available network interfaces
+SERVER_PORT = 5555
+MAX_PLAYERS = 4
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (200, 0, 0)
-GREEN = (0, 200, 0)
-BLUE = (0, 0, 200)
-OCEAN_BLUE = (20, 100, 180)
-LAND_GREEN = (50, 150, 50)
-BEACH_YELLOW = (220, 200, 100)
-MOUNTAIN_GREY = (100, 100, 100)
-FOG_COLOR = (50, 50, 60)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
-# Player Colors
-P1_GREEN = (0, 220, 100)
-P1_GREEN_DARK = (0, 100, 50)
-P2_RED = (220, 50, 50)
-P2_RED_DARK = (100, 20, 20)
-P3_BLUE = (80, 150, 250)
-P3_BLUE_DARK = (40, 75, 125)
-P4_YELLOW = (250, 220, 50)
-P4_YELLOW_DARK = (125, 110, 25)
+# Player Colors - Dictionary for programmatic access (e.g., UI, networking)
+PLAYER_COLORS = {
+    1: (50, 150, 255),   # Blue
+    2: (255, 50, 50),    # Red
+    3: (50, 255, 50),    # Green
+    4: (255, 200, 50)    # Yellow
+}
+
+
+# UI Colors
+BUTTON_COLOR = (30, 80, 150)
+BUTTON_HOVER_COLOR = (50, 120, 200)
+BUTTON_CLICK_COLOR = (10, 40, 100)
 
 # World Generation
-TILE_SIZE = 16
-WORLD_TILES_X = 150
-WORLD_TILES_Y = 100
-WORLD_WIDTH = WORLD_TILES_X * TILE_SIZE
-WORLD_HEIGHT = WORLD_TILES_Y * TILE_SIZE
-WATER_LEVEL = 90  # Increased water level for more sea
-ISLAND_MIN_HEIGHT = 110 # Min height to be a valid starting island
+WORLD_WIDTH = 4000 # World dimension in pixels
+WORLD_HEIGHT = 4000
+TILE_SIZE = 10 # Visual size of a tile in pixels (for drawing)
 
-# Ship Stats
+# Calculated world dimensions in tiles
+WORLD_TILES_X = WORLD_WIDTH // TILE_SIZE
+WORLD_TILES_Y = WORLD_HEIGHT // TILE_SIZE
+
+# Perlin Noise parameters for map generation
+PERLIN_SCALE = 100.0
+PERLIN_OCTAVES = 6
+PERLIN_PERSISTENCE = 0.5
+PERLIN_LACUNARITY = 2.0
+WATER_LEVEL = 0.45 # Values below this are water
+ISLAND_MIN_HEIGHT = 0.6
+
+# Map Colors
+WATER_COLOR = (20, 60, 120)
+LAND_COLOR_LOW = (160, 140, 90)  # Sandy color for shores
+LAND_COLOR_HIGH = (80, 120, 50)   # Grassy color for inland#
+MOUTAIN_COLOR = (100, 100, 100)
+FOG_COLOR = (30, 30, 40) # Dark blue/grey for Fog of War
+
+# Game Logic and Ship Statistics
 SHIP_STATS = {
-    'scout': {
-        'hp': 50,
-        'speed': 8,
-        'radar_range': 200,
-        'image_size': (20, 20)
+    'command_center': {
+        'speed': 0,
+        'hp': 1000,
+        'radar': 400,
+        'image_size': (64, 64)
     },
     'cruiser': {
-        'hp': 150,
-        'speed': 4,
-        'radar_range': 120,
-        'fire_range': 250,
-        'image_size': (30, 30)
+        'speed': 3,
+        'hp': 250,
+        'radar': 300,
+        'image_size': (50, 25)
     },
-    'command_center': {
-        'hp': 500,
-        'speed': 0,
-        'radar_range': 180,
-        'image_size': (50, 50)
+    'scout': {
+        'speed': 6,
+        'hp': 75,
+        'radar': 500,
+        'image_size': (30, 15)
     }
 }
 
-# Combat Phase Settings
-COMBAT_TIMER = 60  # seconds
-PROJECTILE_SPEED = 300
-PROJECTILE_GRAVITY = 200
-MAX_SHOT_POWER = 1000
-DESTRUCTION_RADIUS = 30
+# Combat Mechanics
+MIN_SHOT_POWER = 200
+MAX_SHOT_POWER = 1200
+SHOT_CHARGE_RATE = 500  # Power per second
+PROJECTILE_SPEED_MULTIPLIER = 1.0 # Multiplies shot power to get initial speed
+PROJECTILE_GRAVITY = 200.0 # Pixels per second^2
+PROJECTILE_DAMAGE = 100
+EXPLOSION_RADIUS = 50 # Visual radius of the explosion effect
+DESTRUCTION_RADIUS = 4 # Radius of terrain deformation in tiles
+

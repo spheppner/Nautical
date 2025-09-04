@@ -17,7 +17,7 @@ class LobbyView:
     def on_enter(self, data):
         if data:
             self.is_host = data.get('is_host', False)
-        self.lobby_state = None  # Reset on entering
+        self.lobby_state = None
 
     def handle_event(self, event):
         if self.is_host and self.start_game_button.handle_event(event):
@@ -26,15 +26,16 @@ class LobbyView:
 
     def update(self, dt):
         client = self.game_manager.network_client
-        if client and client.last_message:
-            msg = client.last_message
-            if msg['type'] == 'lobby_update':
-                self.lobby_state = msg['payload']
-                client.last_message = None
-            elif msg['type'] == 'start_game':
-                print("Start game message received from server.")
-                client.last_message = None
-                self.game_manager.change_state("STRATEGY", {'initial_state': msg['payload']})
+        if client:
+            # Process all messages in the queue
+            for msg in client.get_messages():
+                if msg['type'] == 'lobby_update':
+                    self.lobby_state = msg['payload']
+                elif msg['type'] == 'start_game':
+                    print("Start game message received from server.")
+                    self.game_manager.change_state("STRATEGY", {'initial_state': msg['payload']})
+                    # Break because we are changing state
+                    return
 
     def draw(self, screen):
         title_surf = self.font.render("Game Lobby", True, WHITE)

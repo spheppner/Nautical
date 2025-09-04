@@ -3,6 +3,7 @@ import pygame
 import math
 from settings import *
 from entities import Projectile
+import random
 
 
 class CombatPlayer:

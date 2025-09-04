@@ -1,31 +1,44 @@
 # ui.py
-# ... existing Button class code ...
 import pygame
 from settings import *
 
 
 class Button:
-    def __init__(self, x, y, width, height, text, action=None):
+    def __init__(self, x, y, width, height, text, on_click=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
-        self.action = action
+        self.on_click = on_click
         self.font = pygame.font.Font(None, 36)
-        self.color = BLUE
-        self.hover_color = (70, 70, 200)
+        self.color = BUTTON_COLOR
+        self.hover_color = BUTTON_HOVER_COLOR
+        self.click_color = BUTTON_CLICK_COLOR
         self.is_hovered = False
+        self.click_timer = 0
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
             self.is_hovered = self.rect.collidepoint(event.pos)
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.is_hovered:
-            if self.action:
-                self.action()
-            return True  # Indicates the button was clicked
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if self.is_hovered and event.button == 1:
+                if self.on_click:
+                    self.on_click()
+                    self.click_timer = 0.2  # Show clicked color for 0.2 seconds
+                return True
         return False
 
+    def update(self, dt):
+        if self.click_timer > 0:
+            self.click_timer -= dt
+
     def draw(self, screen):
-        color = self.hover_color if self.is_hovered else self.color
-        pygame.draw.rect(screen, color, self.rect, border_radius=10)
+        current_color = self.color
+        if self.click_timer > 0:
+            current_color = self.click_color
+        elif self.is_hovered:
+            current_color = self.hover_color
+
+        pygame.draw.rect(screen, current_color, self.rect)
+        pygame.draw.rect(screen, WHITE, self.rect, 2)
 
         text_surf = self.font.render(self.text, True, WHITE)
         text_rect = text_surf.get_rect(center=self.rect.center)
@@ -53,15 +66,15 @@ class TextInputBox:
         if event.type == pygame.KEYDOWN:
             if self.active:
                 if event.key == pygame.K_RETURN:
-                    self.active = False
-                    self.color = self.color_inactive
+                    return self.text
                 elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
                 self.txt_surface = self.font.render(self.text, True, WHITE)
+        return None
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect, 2)
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)
 

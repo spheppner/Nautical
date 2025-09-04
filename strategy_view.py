@@ -1,6 +1,6 @@
 # strategy_view.py
-# ... (Camera class is unchanged) ...
 import pygame
+import math
 from settings import *
 from world import World
 from entities import ArtilleryCruiser, ScoutShip, CommandCenter
@@ -51,6 +51,7 @@ class StrategyView:
 
         self.fog_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT))
         self.fog_surface.fill(FOG_COLOR)
+        self.fog_surface.set_colorkey((255, 0, 255))  # Make a color transparent
 
         for unit_id, unit_data in initial_state['units'].items():
             pos = unit_data['pos']
@@ -71,9 +72,12 @@ class StrategyView:
         print(f"Created {len(self.all_sprites)} sprites.")
 
     def submit_turn(self):
-        print("Submitting commands to server...")
-        self.game_manager.network_client.send_commands(self.pending_commands)
-        self.pending_commands = []
+        if self.pending_commands:
+            print(f"Submitting {len(self.pending_commands)} commands to server...")
+            self.game_manager.network_client.send_commands(self.pending_commands)
+            self.pending_commands = []
+        else:
+            print("No commands to submit.")
 
     def on_enter(self, data=None):
         if data and 'initial_state' in data:
@@ -97,8 +101,9 @@ class StrategyView:
                             sprite.selected = True
 
             if event.button == 3:  # Right click
-                if self.selected_unit and self.world.is_land(pygame.math.Vector2(world_pos)) == False:
+                if self.selected_unit and not self.world.is_land(pygame.math.Vector2(world_pos)):
                     self.selected_unit.set_target(world_pos)
+                    self.pending_commands = [c for c in self.pending_commands if c['unit_id'] != self.selected_unit.unique_id]
                     command = {
                         'action': 'move',
                         'unit_id': self.selected_unit.unique_id,
@@ -109,14 +114,15 @@ class StrategyView:
     def update(self, dt):
         if not self.camera: return
         client = self.game_manager.network_client
-        if client and client.last_message and client.last_message['type'] == 'game_update':
-            game_state = client.last_message['payload']
-            for unit_id, unit_data in game_state['units'].items():
-                if unit_id in self.sprite_map:
-                    self.sprite_map[unit_id].update_from_state(unit_data)
-            client.last_message = None
+        if client:
+            for msg in client.get_messages():
+                if msg['type'] == 'game_update':
+                    game_state = msg['payload']
+                    for unit_id, unit_data in game_state['units'].items():
+                        if unit_id in self.sprite_map:
+                            self.sprite_map[unit_id].update_from_state(unit_data)
 
-        self.all_sprites.update()
+        self.all_sprites.update(dt)  # Pass delta time for smooth movement
 
         keys = pygame.key.get_pressed()
         cam_speed = 500 * dt
@@ -131,18 +137,28 @@ class StrategyView:
         if not self.world: return
         screen.blit(self.world.map_surface, self.camera.camera.topleft)
 
-        if self.fog_surface:
-            self.fog_surface.fill(FOG_COLOR)
-            my_player_id = self.game_manager.network_client.player_id
-            for sprite in self.all_sprites:
-                if sprite.player_owner == my_player_id:
-                    pygame.draw.circle(self.fog_surface, (0, 0, 0, 0), sprite.pos, sprite.radar_range)
-            screen.blit(self.fog_surface, self.camera.camera.topleft, special_flags=pygame.BLEND_RGBA_MULT)
+        my_player_id = self.game_manager.network_client.player_id
+        my_units = [s for s in self.all_sprites if s.player_owner == my_player_id]
+
+        visible_sprites = set(my_units)
+        for unit in self.all_sprites:
+            if unit.player_owner != my_player_id:
+                for my_unit in my_units:
+                    if unit.pos.distance_to(my_unit.pos) <= my_unit.radar_range:
+                        visible_sprites.add(unit)
+                        break
 
         for sprite in self.all_sprites:
-            screen.blit(sprite.image, self.camera.apply(sprite.rect))
-            if sprite.player_owner == self.game_manager.network_client.player_id:
+            if sprite in visible_sprites:
+                screen.blit(sprite.image, self.camera.apply(sprite.rect))
                 sprite.draw_extras(screen, self.camera)
+
+        if self.fog_surface:
+            self.fog_surface.fill(FOG_COLOR)
+            self.fog_surface.blit(self.world.map_surface, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
+            for my_unit in my_units:
+                pygame.draw.circle(self.fog_surface, (255, 0, 255), my_unit.pos, my_unit.radar_range)
+            screen.blit(self.fog_surface, self.camera.camera.topleft)
 
         self.submit_turn_button.draw(screen)
 

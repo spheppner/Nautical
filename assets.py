@@ -12,25 +12,25 @@ class Assets:
     def generate_ship_images(self):
         """Creates the surfaces for our ship sprites programmatically."""
         # Player 1 (Green Team)
-        self.images['cruiser_1'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], P1_GREEN, P1_GREEN_DARK)
-        self.images['scout_1'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], P1_GREEN, P1_GREEN_DARK, shape='triangle')
-        self.images['command_center_1'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], P1_GREEN, P1_GREEN_DARK, shape='star')
+        self.images['cruiser_1'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], PLAYER_COLORS[1], PLAYER_COLORS[1])
+        self.images['scout_1'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], PLAYER_COLORS[1], PLAYER_COLORS[1], shape='triangle')
+        self.images['command_center_1'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], PLAYER_COLORS[1], PLAYER_COLORS[1], shape='star')
 
         # Player 2 (Red Team)
-        self.images['cruiser_2'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], P2_RED, P2_RED_DARK)
-        self.images['scout_2'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], P2_RED, P2_RED_DARK, shape='triangle')
-        self.images['command_center_2'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], P2_RED, P2_RED_DARK, shape='star')
+        self.images['cruiser_2'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], PLAYER_COLORS[2], PLAYER_COLORS[2])
+        self.images['scout_2'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], PLAYER_COLORS[2], PLAYER_COLORS[2], shape='triangle')
+        self.images['command_center_2'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], PLAYER_COLORS[2], PLAYER_COLORS[2], shape='star')
 
         # Add more players if needed
         # Player 3 (Blue Team)
-        self.images['cruiser_3'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], P3_BLUE, P3_BLUE_DARK)
-        self.images['scout_3'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], P3_BLUE, P3_BLUE_DARK, shape='triangle')
-        self.images['command_center_3'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], P3_BLUE, P3_BLUE_DARK, shape='star')
+        self.images['cruiser_3'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], PLAYER_COLORS[3], PLAYER_COLORS[3])
+        self.images['scout_3'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], PLAYER_COLORS[3], PLAYER_COLORS[3], shape='triangle')
+        self.images['command_center_3'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], PLAYER_COLORS[3], PLAYER_COLORS[3], shape='star')
 
         # Player 4 (Yellow Team)
-        self.images['cruiser_4'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], P4_YELLOW, P4_YELLOW_DARK)
-        self.images['scout_4'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], P4_YELLOW, P4_YELLOW_DARK, shape='triangle')
-        self.images['command_center_4'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], P4_YELLOW, P4_YELLOW_DARK, shape='star')
+        self.images['cruiser_4'] = self.create_ship_sprite(SHIP_STATS['cruiser']['image_size'], PLAYER_COLORS[4], PLAYER_COLORS[4])
+        self.images['scout_4'] = self.create_ship_sprite(SHIP_STATS['scout']['image_size'], PLAYER_COLORS[4], PLAYER_COLORS[4], shape='triangle')
+        self.images['command_center_4'] = self.create_ship_sprite(SHIP_STATS['command_center']['image_size'], PLAYER_COLORS[4], PLAYER_COLORS[4], shape='star')
 
     def create_ship_sprite(self, size, color, dark_color, shape='rect'):
         """Creates a stylized ship surface."""

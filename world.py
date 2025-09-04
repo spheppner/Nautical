@@ -75,13 +75,13 @@ class World:
     def get_tile_color(self, height):
         """Determine color based on height."""
         if height < WATER_LEVEL:
-            return OCEAN_BLUE
+            return WATER_COLOR
         elif height < WATER_LEVEL + 15:
-            return BEACH_YELLOW
+            return LAND_COLOR_LOW
         elif height < 180:
-            return LAND_GREEN
+            return LAND_COLOR_HIGH
         else:
-            return MOUNTAIN_GREY
+            return MOUTAIN_COLOR
 
     def create_map_surface(self):
         """Renders the entire world terrain to a large pygame.Surface for efficiency."""
