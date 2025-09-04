@@ -1,8 +1,7 @@
-# world.py
 import pygame
 import random
 import math
-from perlin import PerlinNoise  # <--- Changed from 'noise' library
+from perlin import PerlinNoise
 from settings import *
 
 

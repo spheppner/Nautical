@@ -1,4 +1,3 @@
-# main_menu_view.py
 import pygame
 from settings import *
 from ui import Button, TextInputBox

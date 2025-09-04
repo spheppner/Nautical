@@ -1,4 +1,3 @@
-# combat_view.py
 import pygame
 import math
 from settings import *

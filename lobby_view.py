@@ -1,4 +1,3 @@
-# lobby_view.py
 import pygame
 import socket
 from settings import *

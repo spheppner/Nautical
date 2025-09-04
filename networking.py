@@ -1,6 +1,3 @@
-# networking.py
-# A functional implementation of the client-server networking logic.
-
 import socket
 import pickle
 import threading

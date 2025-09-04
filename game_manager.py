@@ -1,8 +1,6 @@
-# game_manager.py
 import pygame
 from settings import *
 
-# We import the views here to avoid circular imports
 from main_menu_view import MainMenuView
 from lobby_view import LobbyView
 from strategy_view import StrategyView

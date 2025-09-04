@@ -1,5 +1,3 @@
-# assets.py
-# Centralized module for loading and creating game assets.
 import pygame
 from settings import *
 

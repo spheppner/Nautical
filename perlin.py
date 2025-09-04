@@ -1,10 +1,3 @@
-# perlin.py
-# Perlin noise generator.
-# Based on the implementation by Casey Duncan, found at:
-# https://github.com/caseman/noise/blob/master/noise.py
-# Which is under the MIT license.
-# Adapted for simplicity and to be a standalone module.
-
 import math
 import random
 

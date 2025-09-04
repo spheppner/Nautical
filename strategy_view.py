@@ -1,6 +1,4 @@
-# strategy_view.py
 import pygame
-import math
 from settings import *
 from world import World
 from entities import ArtilleryCruiser, ScoutShip, CommandCenter

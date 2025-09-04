@@ -1,4 +1,3 @@
-# entities.py
 import pygame
 from settings import *
 from assets import assets

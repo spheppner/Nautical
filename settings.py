@@ -1,4 +1,3 @@
-# settings.py
 # Centralized file for all game constants and configuration.
 
 # Screen and Display

@@ -1,5 +1,3 @@
-# author: Simon Heppner
-# license: gpl, see LICENSE file
 # idea: Based on the "Nautical" concept by Horst Jens and Simon Heppner (2020)
 
 import pygame
